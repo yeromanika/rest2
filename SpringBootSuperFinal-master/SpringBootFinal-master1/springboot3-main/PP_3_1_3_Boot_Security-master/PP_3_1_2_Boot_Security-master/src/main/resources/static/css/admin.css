@@ -1,0 +1,67 @@
+.admin-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.current-user {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+.admin-controls {
+    margin-bottom: 20px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th, .users-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.users-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.users-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.action-btn {
+    margin-right: 5px;
+}
+
+.roles-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.role-checkbox {
+    display: flex;
+    align-items: center;
+}
+
+.role-checkbox input {
+    margin-right: 8px;
+}

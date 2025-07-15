@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+    <link href="/css/user.css" rel="stylesheet">
+</head>
+<body>
+<div class="user-container">
+    <header class="user-header">
+        <h2>User Profile</h2>
+        <div class="user-info">
+            Email: <span id="user-email"></span> |
+            Roles: <span id="user-roles"></span>
+        </div>
+    </header>
+
+    <main class="user-main">
+        <div class="user-profile-card">
+            <div class="profile-field">
+                <label>First Name:</label>
+                <div class="value" id="profile-first-name"></div>
+            </div>
+            <div class="profile-field">
+                <label>Last Name:</label>
+                <div class="value" id="profile-last-name"></div>
+            </div>
+            <div class="profile-field">
+                <label>Age:</label>
+                <div class="value" id="profile-age"></div>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="/js/js.js"></script>
+</body>
+</html>
