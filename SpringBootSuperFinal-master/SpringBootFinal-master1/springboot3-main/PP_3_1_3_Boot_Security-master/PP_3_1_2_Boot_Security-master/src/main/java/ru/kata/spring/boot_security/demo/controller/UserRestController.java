@@ -26,6 +26,7 @@ public class UserRestController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.findAllUsers());
     }
@@ -40,7 +41,7 @@ public class UserRestController {
         return ResponseEntity.ok(userService.findUserById(id));
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         try {
             User createdUser = userService.createUser(user, user.getRoleIds());
@@ -66,7 +67,7 @@ public class UserRestController {
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);
-            return ResponseEntity.noContent().build(); // 204 No Content - правильный ответ для DELETE
+            return ResponseEntity.ok().body(Map.of("message", "User deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)

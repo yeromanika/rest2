@@ -1,15 +1,20 @@
 // Конфигурация API
-const API_URL = '/api';
+const API_URL = {
+    BASE: '/api',
+    USERS: '/api',
+    ROLES: '/api/roles',
+    CURRENT_USER: '/api/current'
+};
+
 let users = [];
 let roles = [];
 let currentUser = null;
 let userModal = null;
+let deleteUserModal = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация модального окна
     userModal = new bootstrap.Modal(document.getElementById('userModal'));
-
-    // Определяем тип страницы
+    deleteUserModal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
     if (document.getElementById('usersTable')) {
         initAdminPage();
     } else if (document.getElementById('user-profile-card')) {
@@ -18,12 +23,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 1. Общие функции -----------------------------------------------------------
-
 async function fetchData(url, method = 'GET', body = null) {
     try {
         const options = {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             credentials: 'include'
         };
 
@@ -32,34 +39,35 @@ async function fetchData(url, method = 'GET', body = null) {
         const response = await fetch(url, options);
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || error.message || 'Request failed');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || errorData.error || 'Request failed');
         }
 
         return await response.json();
     } catch (error) {
-        console.error('Fetch error:', error);
+        console.error(`Fetch error [${method} ${url}]:`, error);
         alert('Error: ' + error.message);
         throw error;
     }
 }
 
 // 2. Функции для работы с данными --------------------------------------------
-
 async function loadCurrentUser() {
     try {
-        currentUser = await fetchData(`${API_URL}/current`);
+        currentUser = await fetchData(API_URL.CURRENT_USER);
+        document.getElementById('currentUserEmail').textContent = currentUser.email;
+        document.getElementById('currentUserRoles').textContent = currentUser.roles
+            ? currentUser.roles.map(r => r.name.replace('ROLE_', '')).join(', ')
+            : '';
         renderUserProfile();
-        return currentUser;
     } catch (error) {
         console.error('Failed to load current user:', error);
-        return null;
     }
 }
 
 async function loadUsers() {
     try {
-        users = await fetchData(`${API_URL}`);
+        users = await fetchData(API_URL.USERS);
         renderUsersTable();
     } catch (error) {
         console.error('Error loading users:', error);
@@ -68,41 +76,58 @@ async function loadUsers() {
 
 async function loadRoles() {
     try {
-        roles = await fetchData(`${API_URL}/roles`);
+        roles = await fetchData(API_URL.ROLES);
         populateRolesDropdown();
     } catch (error) {
         console.error('Error loading roles:', error);
     }
 }
 
-// 3. Функции рендеринга -----------------------------------------------------
+function populateRolesDropdown() {
+    const selects = [
+        document.getElementById('addRoles'),
+        document.getElementById('editRoles')
+    ];
 
+    selects.forEach(select => {
+        if (select && roles.length) {
+            select.innerHTML = roles.map(role =>
+                `<option value="${role.id}">${role.name.replace('ROLE_', '')}</option>`
+            ).join('');
+        }
+    });
+}
+
+// 3. Функции рендеринга -----------------------------------------------------
 function renderUserProfile() {
     if (!currentUser) return;
 
-    const emailElement = document.getElementById('user-email');
-    const rolesElement = document.getElementById('user-roles');
-    const firstNameElement = document.getElementById('profile-first-name');
-    const lastNameElement = document.getElementById('profile-last-name');
-    const ageElement = document.getElementById('profile-age');
+    const fields = {
+        'user-email': currentUser.email,
+        'user-roles': currentUser.roles?.map(r => r.name.replace('ROLE_', '')).join(', ') || '',
+        'profile-first-name': currentUser.firstName || '',
+        'profile-last-name': currentUser.lastName || '',
+        'profile-age': currentUser.age || ''
+    };
 
-    if (emailElement) emailElement.textContent = currentUser.email;
-    if (rolesElement) rolesElement.textContent = currentUser.roles
-        ? currentUser.roles.map(r => r.name.replace('ROLE_', '')).join(', ')
-        : '';
-    if (firstNameElement) firstNameElement.textContent = currentUser.firstName || '';
-    if (lastNameElement) lastNameElement.textContent = currentUser.lastName || '';
-    if (ageElement) ageElement.textContent = currentUser.age || '';
+    Object.entries(fields).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    });
 }
-
 function renderUsersTable() {
-    const tbody = document.querySelector('#usersTable tbody');
-    if (!tbody) return;
+    const tbody = document.getElementById('usersTable');
+    if (!tbody) {
+        console.error("Table body not found!");
+        return;
+    }
 
     tbody.innerHTML = users.map(user => {
-        // Проверяем наличие ролей и правильно их форматируем
-        const roles = user.roles && user.roles.length > 0
-            ? user.roles.map(r => r.name.replace('ROLE_', '')).join(', ')
+        // Отладочный вывод
+        console.log(`User ${user.id} roles:`, user.roles);
+
+        const rolesDisplay = user.roles
+            ? Object.values(user.roles).map(r => r.name.replace('ROLE_', '')).join(', ')
             : 'No roles';
 
         return `
@@ -110,89 +135,90 @@ function renderUsersTable() {
             <td>${user.id}</td>
             <td>${user.firstName}</td>
             <td>${user.lastName}</td>
+            <td>${user.age || ''}</td>
             <td>${user.email}</td>
-            <td>${roles}</td>
-            <td>
-                <button class="btn btn-sm btn-primary edit-btn" data-id="${user.id}">Edit</button>
-                <button class="btn btn-sm btn-danger delete-btn" data-id="${user.id}">Delete</button>
-            </td>
-        </tr>`;
+            <td>${rolesDisplay}</td>
+            <td><button class="btn btn-sm btn-primary edit-btn" data-id="${user.id}">Edit</button></td>
+            <td><button class="btn btn-sm btn-danger delete-btn" data-id="${user.id}">Delete</button></td>
+        </tr>
+        `;
     }).join('');
-
-    // Добавляем обработчики для кнопок в таблице
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => editUser(btn.dataset.id));
-    });
-
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => deleteUser(btn.dataset.id));
-    });
-}
-
-function populateRolesDropdown() {
-    const select = document.getElementById('roles');
-    if (!select) return;
-
-    select.innerHTML = roles.map(role => `
-        <option value="${role.id}">${role.name.replace('ROLE_', '')}</option>
-    `).join('');
 }
 
 // 4. Функции для работы с пользователями -------------------------------------
+async function saveNewUser() {
+    const form = document.getElementById('addUserForm');
+    if (!form) return;
 
-async function saveUser() {
     const formData = {
-        firstName: document.getElementById('firstName').value,
-        lastName: document.getElementById('lastName').value,
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value,
-        age: document.getElementById('age')?.value || 0, // Добавляем возраст
-        roleIds: Array.from(document.getElementById('roles').selectedOptions)
+        firstName: document.getElementById('addFirstName').value,
+        lastName: document.getElementById('addLastName').value,
+        email: document.getElementById('addEmail').value,
+        password: document.getElementById('addPassword').value,
+        age: document.getElementById('addAge').value || 0,
+        roleIds: Array.from(document.getElementById('addRoles').selectedOptions)
             .map(option => parseInt(option.value))
     };
 
-    const userId = document.getElementById('userId').value;
-    const url = userId ? `${API_URL}/${userId}` : `${API_URL}`;
-    const method = userId ? 'PUT' : 'POST';
-
     try {
-        const response = await fetchData(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
+        const response = await fetch(`${API_URL.BASE}/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             credentials: 'include',
             body: JSON.stringify(formData)
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || error.message || 'Request failed');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to create user');
         }
 
-        if (userModal) userModal.hide();
+        // Закрываем модальное окно добавления
+        const addUserModal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+        if (addUserModal) addUserModal.hide();
+
+        // Очищаем форму
+        form.reset();
+
+        // Обновляем список пользователей
         await loadUsers();
+
+        // Переключаемся на вкладку с таблицей пользователей
+        const usersTab = document.querySelector('#users-tab');
+        if (usersTab) {
+            const tab = new bootstrap.Tab(usersTab);
+            tab.show();
+        }
+
+        alert('User created successfully!');
     } catch (error) {
-        console.error('Error saving user:', error);
-        alert('Error saving user: ' + error.message);
+        console.error('Create user error:', error);
+        alert('Error: ' + error.message);
     }
 }
 
+
 async function editUser(id) {
     try {
-        const user = await fetchData(`${API_URL}/${id}`);
+        const user = await fetchData(`${API_URL.USERS}/${id}`);
 
         document.getElementById('modalTitle').textContent = 'Edit User';
-        document.getElementById('userId').value = user.id;
-        document.getElementById('firstName').value = user.firstName;
-        document.getElementById('lastName').value = user.lastName;
-        document.getElementById('email').value = user.email;
-        document.getElementById('age').value = user.age || '';
-        document.getElementById('password').value = '';
+        document.getElementById('editUserId').value = user.id;
+        document.getElementById('editFirstName').value = user.firstName;
+        document.getElementById('editLastName').value = user.lastName;
+        document.getElementById('editEmail').value = user.email;
+        document.getElementById('editAge').value = user.age || '';
+        document.getElementById('editPassword').value = '';
 
-        // Сбрасываем выделение ролей
-        const rolesSelect = document.getElementById('roles');
-        Array.from(rolesSelect.options).forEach(option => {
-            option.selected = user.roles.some(r => r.id == option.value);
-        });
+        const rolesSelect = document.getElementById('editRoles');
+        if (rolesSelect) {
+            Array.from(rolesSelect.options).forEach(option => {
+                option.selected = user.roles?.some(r => r.id == option.value) || false;
+            });
+        }
 
         userModal.show();
     } catch (error) {
@@ -201,38 +227,92 @@ async function editUser(id) {
     }
 }
 
-async function deleteUser(id) {
-    if (confirm('Are you sure you want to delete this user?')) {
-        try {
-            const response = await fetch(`${API_URL}/${id}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
+async function saveUser() {
+    const userId = document.getElementById('editUserId').value;
+    if (!userId) return;
 
-            // Обрабатываем случай, когда сервер возвращает 204 No Content
-            if (response.status === 204) {
-                await loadUsers();
-                return;
-            }
+    const formData = {
+        firstName: document.getElementById('editFirstName').value,
+        lastName: document.getElementById('editLastName').value,
+        email: document.getElementById('editEmail').value,
+        password: document.getElementById('editPassword').value || undefined,
+        age: document.getElementById('editAge').value || 0,
+        roleIds: Array.from(document.getElementById('editRoles').selectedOptions)
+            .map(option => parseInt(option.value))
+    };
 
-            // Если сервер возвращает что-то кроме 204, пробуем распарсить JSON
-            const data = await response.json();
+    try {
+        const response = await fetch(`${API_URL.USERS}/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+        });
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to delete user');
-            }
-
-            await loadUsers();
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            alert('Error deleting user: ' + error.message);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update user');
         }
+
+        userModal.hide();
+        await loadUsers();
+        alert('User updated successfully!');
+    } catch (error) {
+        console.error('Update user error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+
+async function deleteUser(id) {
+    try {
+        // Получаем данные пользователя для отображения в модальном окне
+        const user = await fetchData(`${API_URL.USERS}/${id}`);
+
+        // Заполняем модальное окно данными пользователя
+        document.getElementById('deleteUserId').textContent = user.id;
+        document.getElementById('deleteFirstName').textContent = user.firstName;
+        document.getElementById('deleteLastName').textContent = user.lastName;
+        document.getElementById('deleteAge').textContent = user.age || '';
+        document.getElementById('deleteEmail').textContent = user.email;
+        document.getElementById('deleteRoles').textContent =
+            user.roles?.map(r => r.name.replace('ROLE_', '')).join(', ') || '';
+
+        // Показываем модальное окно подтверждения
+        deleteUserModal.show();
+
+        // Обработчик кнопки удаления в модальном окне
+        document.getElementById('confirmDeleteBtn').onclick = async function() {
+            try {
+                await fetchData(`${API_URL.USERS}/${id}`, 'DELETE');
+                deleteUserModal.hide();
+                await loadUsers();
+
+                // Переключаемся на вкладку с таблицей пользователей
+                const usersTab = document.querySelector('#users-tab');
+                if (usersTab) {
+                    const tab = new bootstrap.Tab(usersTab);
+                    tab.show();
+                }
+
+                alert('User deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Error: ' + error.message);
+            }
+        };
+    } catch (error) {
+        console.error('Error loading user for deletion:', error);
+        alert('Error loading user: ' + error.message);
     }
 }
 
 // 5. Инициализация страниц --------------------------------------------------
 
-function initAdminPage() {
+async function initAdminPage() {
     // Загрузка данных
     Promise.all([loadCurrentUser(), loadRoles(), loadUsers()])
         .catch(error => console.error('Initialization error:', error));
@@ -249,8 +329,6 @@ function initAdminPage() {
     document.getElementById('logoutBtn').addEventListener('click', () => {
         window.location.href = '/logout';
     });
-
-
 }
 
 function initUserPage() {

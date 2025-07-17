@@ -47,11 +47,10 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-    @Override
     @Transactional(readOnly = true)
     public List<User> findAllUsers() {
         List<User> users = userRepository.findAll();
-        users.forEach(user -> Hibernate.initialize(user.getRoles()));
+        users.forEach(user -> Hibernate.initialize(user.getRoles())); // Важно!
         return users;
     }
 

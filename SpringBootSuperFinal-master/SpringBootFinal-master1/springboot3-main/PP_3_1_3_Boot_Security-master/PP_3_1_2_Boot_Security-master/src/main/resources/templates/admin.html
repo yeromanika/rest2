@@ -2,101 +2,112 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel</title>
+    <title>Admin panel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .sidebar {
-            background-color: #f8f9fa;
-            height: 100vh;
-            padding: 20px;
-        }
-        .user-card {
-            margin-bottom: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
+<div class="header-bar">
+    <span>
+        <b id="currentUserEmail">No email</b>
+        with roles:
+        <span id="currentUserRoles"></span>
+    </span>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
+</div>
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2 sidebar">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5>Admin Panel</h5>
-                <button class="btn btn-sm btn-outline-danger" id="logoutBtn">Logout</button>
-            </div>
-            <ul class="nav flex-column">
+        <div class="col-2 sidebar p-0">
+            <ul class="nav flex-column mt-3">
                 <li class="nav-item">
-                    <button class="btn btn-link nav-link" id="showUsersBtn">Users</button>
+                    <a class="nav-link active" href="/admin">Admin</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user">User</a>
                 </li>
             </ul>
         </div>
 
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10 p-4">
-            <!-- Users Table Section -->
-            <div id="usersSection">
-                <div class="d-flex justify-content-between mb-4">
-                    <h3>Users Management</h3>
-                    <button class="btn btn-primary" id="addUserBtn">Add User</button>
-                </div>
+        <!-- Content -->
+        <div class="col-10 p-0">
+            <div class="main-content">
+                <h1>Admin panel</h1>
 
-                <div class="table-responsive">
-                    <table class="table table-striped" id="usersTable">
-                        <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Email</th>
-                            <th>Roles</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+                <ul class="nav nav-tabs mb-4">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#users-table">Users table</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#add-user">Add New User</a>
+                    </li>
+                </ul>
 
-            <!-- Add/Edit User Modal -->
-            <div class="modal fade" id="userModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="modalTitle">Add User</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="tab-content">
+                    <!-- Users Table Tab -->
+                    <div class="tab-pane fade show active" id="users-table">
+                        <div class="section-container">
+                            <div class="section-title">All users</div>
+                            <button id="addUserBtn" class="btn btn-primary mb-3">Add User</button>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>First Name</th>
+                                        <th>Last Name</th>
+                                        <th>Age</th>
+                                        <th>Email</th>
+                                        <th>Roles</th>
+                                        <th>Edit</th>
+                                        <th>Delete</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="usersTable">
+                                    <!-- Users will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="modal-body">
-                            <form id="userForm">
-                                <input type="hidden" id="userId">
-                                <div class="mb-3">
-                                    <label class="form-label">First Name</label>
-                                    <input type="text" class="form-control" id="firstName" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Last Name</label>
-                                    <input type="text" class="form-control" id="lastName" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Age</label>
-                                    <input type="number" class="form-control" id="age" min="0" max="150" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="password">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Roles</label>
-                                    <select multiple class="form-select" id="roles" required></select>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" id="saveUserBtn">Save</button>
+                    </div>
+
+                    <!-- Add User Tab -->
+                    <div class="tab-pane fade" id="add-user">
+                        <div class="section-container">
+                            <div class="section-title">Add new user</div>
+                            <div class="centered-form">
+                                <form id="addUserForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">First Name</label>
+                                        <input type="text" class="form-control" id="addFirstName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="addLastName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="addEmail" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Age</label>
+                                        <input type="number" class="form-control" id="addAge" min="0" max="150">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="addPassword" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Roles</label>
+                                        <select multiple class="form-select" id="addRoles" required>
+                                            <!-- Roles will be populated by JavaScript -->
+                                        </select>
+                                    </div>
+                                    <div class="form-submit-center">
+                                        <button type="button" class="btn btn-success px-4" onclick="saveNewUser()">Add user</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -105,9 +116,95 @@
     </div>
 </div>
 
+<!-- Edit User Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="editFirstName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="editLastName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Age</label>
+                        <input type="number" class="form-control" id="editAge" min="0" max="150">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="editPassword" placeholder="Leave empty to keep current">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Roles</label>
+                        <select multiple class="form-select" id="editRoles" required>
+                            <!-- Roles will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="saveUser()">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete user</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div><strong>ID</strong></div>
+                    <div class="delete-modal-value" id="deleteUserId"></div>
+                </div>
+                <div class="mb-3">
+                    <div><strong>First name</strong></div>
+                    <div class="delete-modal-value" id="deleteFirstName"></div>
+                </div>
+                <div class="mb-3">
+                    <div><strong>Last name</strong></div>
+                    <div class="delete-modal-value" id="deleteLastName"></div>
+                </div>
+                <div class="mb-3">
+                    <div><strong>Age</strong></div>
+                    <div class="delete-modal-value" id="deleteAge"></div>
+                </div>
+                <div class="mb-3">
+                    <div><strong>Email</strong></div>
+                    <div class="delete-modal-value" id="deleteEmail"></div>
+                </div>
+                <div class="mb-3">
+                    <div><strong>Role</strong></div>
+                    <div class="delete-modal-value" id="deleteRoles"></div>
+                </div>
+            </div>
+            <div class="modal-footer delete-modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-</script>
 <script src="/js/js.js"></script>
 </body>
 </html>
