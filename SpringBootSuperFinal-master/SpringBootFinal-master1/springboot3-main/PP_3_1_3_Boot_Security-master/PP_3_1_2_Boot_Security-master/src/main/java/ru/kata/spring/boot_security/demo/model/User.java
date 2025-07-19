@@ -91,12 +91,14 @@ public class User implements UserDetails {
     public void setAge(Integer age) { this.age = age; }
 
     public Set<Role> getRoles() { return roles; }
+
     public void setRoles(Set<Role> newRoles) {
         this.roles.clear();
         if (newRoles != null) {
             this.roles.addAll(newRoles);
         }
     }
+
 
     // UserDetails методы
     @Override
@@ -126,14 +128,19 @@ public class User implements UserDetails {
 
 
     @Transient
+    private List<Long> roleIds; // Добавленное поле
+
+
+    @Transient
     public List<Long> getRoleIds() {
-        if (roles == null) {
-            return new ArrayList<>();
-        }
-        return roles.stream()
-                .map(Role::getId)
-                .collect(Collectors.toList());
+        return this.roleIds != null ? this.roleIds : new ArrayList<>();
     }
+
+    @Transient
+    public void setRoleIds(List<Long> roleIds) {
+        this.roleIds = roleIds;
+    }
+
 
 
     @Override

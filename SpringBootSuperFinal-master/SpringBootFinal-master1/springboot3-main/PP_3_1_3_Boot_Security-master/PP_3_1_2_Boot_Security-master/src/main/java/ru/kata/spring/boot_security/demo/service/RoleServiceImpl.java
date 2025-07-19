@@ -57,11 +57,8 @@ public class RoleServiceImpl implements RoleService {
     public void initializeDefaultRoles() {
         if (roleRepository.count() == 0) {
             Role adminRole = new Role("ROLE_ADMIN");
-            adminRole.setId(1L);
-            saveRole(adminRole);
-
             Role userRole = new Role("ROLE_USER");
-            userRole.setId(2L);
+            saveRole(adminRole);
             saveRole(userRole);
         }
     }

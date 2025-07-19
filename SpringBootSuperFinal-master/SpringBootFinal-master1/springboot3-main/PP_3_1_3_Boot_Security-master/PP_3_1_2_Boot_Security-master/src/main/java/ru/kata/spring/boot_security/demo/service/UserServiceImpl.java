@@ -55,24 +55,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true) // Убедитесь, что метод транзакционный
     public User findUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        User user = userRepository.findById(id).orElse(null);
+        // Добавьте эту проверку и инициализацию
+        if (user != null) {
+            Hibernate.initialize(user.getRoles()); // Явно загружаем роли внутри сессии
+        }
+        return user;
     }
 
     @Override
+    @Transactional
     public User createUser(User user, List<Long> roleIds) {
         if (existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        Set<Role> roles = roleIds != null ?
-                roleService.findRolesByIdIn(roleIds) :
-                new HashSet<>();
+        if (roleIds == null || roleIds.isEmpty()) {
+            throw new IllegalArgumentException("At least one role must be selected");
+        }
+
+        Set<Role> roles = new HashSet<>(roleService.findRolesByIds(roleIds));
+        if (roles.isEmpty()) {
+            throw new IllegalArgumentException("Invalid role IDs provided");
+        }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(roles);
         return userRepository.save(user);
     }
+
     @Override
     @Transactional
     public User updateUser(Long id, User userDetails, List<Long> roleIds) {

@@ -8,7 +8,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MvcConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/").setViewName("redirect:/login"); // Перенаправление
-        registry.addViewController("/login").setViewName("login"); // Явный маппинг
+        registry.addViewController("/login").setViewName("index");
+        registry.addViewController("/admin").setViewName("index");
+        registry.addViewController("/user").setViewName("index");
     }
 }
