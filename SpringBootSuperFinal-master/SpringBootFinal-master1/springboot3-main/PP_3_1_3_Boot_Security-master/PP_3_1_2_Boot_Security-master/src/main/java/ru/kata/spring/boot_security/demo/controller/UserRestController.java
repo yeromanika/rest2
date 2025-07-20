@@ -48,11 +48,9 @@ public class UserRestController {
         }
     }
 
-    // ИСПРАВЛЕНО: Явный эндпоинт для создания пользователя
     @PostMapping("/create")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         try {
-            // Убедимся, что roleIds передаются в сервис
             User createdUser = userService.createUser(user, user.getRoleIds());
             return ResponseEntity.ok(createdUser);
         } catch (IllegalArgumentException e) {
@@ -63,7 +61,6 @@ public class UserRestController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
         try {
-            // Убедимся, что roleIds передаются в сервис
             User updatedUser = userService.updateUser(id, user, user.getRoleIds());
             return ResponseEntity.ok(updatedUser);
         } catch (IllegalArgumentException e) {
@@ -80,6 +77,4 @@ public class UserRestController {
             return ResponseEntity.badRequest().body(Map.of("error", "Error deleting user"));
         }
     }
-
-    // УДАЛЕНО: Методы /login и /logout, чтобы Spring Security мог их обрабатывать по умолчанию.
 }

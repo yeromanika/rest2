@@ -2,7 +2,6 @@
 
 const API_URL = {
     BASE: '/api',
-    // ИСПРАВЛЕНО: URL для CRUD операций с пользователями вынесен в отдельную константу
     USERS: '/api',
     ROLES: '/api/roles',
     CURRENT_USER: '/api/current'
@@ -52,7 +51,7 @@ async function checkAuth() {
     }
 }
 
-// ИСПРАВЛЕНО: Форма входа теперь отправляет POST на /login, как ожидает Spring Security
+
 document.getElementById('loginForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const form = e.target;
@@ -243,7 +242,6 @@ async function saveNewUser(e) {
     };
 
     try {
-        // ИСПРАВЛЕНО: URL для создания пользователя
         await fetchData(`${API_URL.BASE}/create`, 'POST', formData);
 
         document.getElementById('addUserForm').reset();
@@ -312,10 +310,24 @@ async function showDeleteModal(id) {
     try {
         const user = await fetchData(`${API_URL.USERS}/${id}`);
         document.getElementById('deleteUserId').value = user.id;
-        document.getElementById('deleteUserFirstName').textContent = user.firstName;
-        document.getElementById('deleteUserLastName').textContent = user.lastName;
-        document.getElementById('deleteUserAge').textContent = user.age || '';
-        document.getElementById('deleteUserEmail').textContent = user.email;
+        document.getElementById('deleteUserIdDisplay').value = user.id;
+        document.getElementById('deleteUserFirstName').value = user.firstName;
+        document.getElementById('deleteUserLastName').value = user.lastName;
+        document.getElementById('deleteUserAge').value = user.age || '';
+        document.getElementById('deleteUserEmail').value = user.email;
+
+        // Заполняем select ролей
+        const rolesSelect = document.getElementById('deleteUserRoles');
+        rolesSelect.innerHTML = ''; // очистить перед заполнением
+        if (user.roles && user.roles.length) {
+            user.roles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.id;
+                option.textContent = role.name.replace('ROLE_', '');
+                option.selected = true;
+                rolesSelect.appendChild(option);
+            });
+        }
 
         if (deleteUserModal) deleteUserModal.show();
 
@@ -327,6 +339,7 @@ async function showDeleteModal(id) {
         alert('Error loading user for deletion: ' + error.message);
     }
 }
+
 
 async function deleteUser(id) {
     try {

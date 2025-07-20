@@ -58,7 +58,6 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true) // Убедитесь, что метод транзакционный
     public User findUserById(Long id) {
         User user = userRepository.findById(id).orElse(null);
-        // Добавьте эту проверку и инициализацию
         if (user != null) {
             Hibernate.initialize(user.getRoles()); // Явно загружаем роли внутри сессии
         }
@@ -89,14 +88,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User updateUser(Long id, User userDetails, List<Long> roleIds) {
-        // Загружаем пользователя заново, минуя кеш
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        // Создаем новый managed объект для ролей
         Set<Role> managedRoles = roleService.findRolesByIdIn(roleIds).stream()
                 .map(role -> {
-                    // Для каждой роли получаем свежий экземпляр из БД
                     Role freshRole = roleService.findRoleById(role.getId());
                     if (freshRole == null) {
                         throw new IllegalArgumentException("Role not found: " + role.getId());
